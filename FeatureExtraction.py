@@ -1,5 +1,7 @@
 from statistics import mean
 
+DATA_DIR = 'data\\'
+
 #maybe optimize code so it doesn't create the whole dictionary each time anew
 participants = {}
 
@@ -12,7 +14,7 @@ def createParticipants():
     }
     details = {}
     participants = {}
-    with open('Participant.csv') as participantFile:
+    with open(DATA_DIR + 'Participant.csv') as participantFile:
         for line in participantFile.readlines():
             details = {}
             l = [x.strip() for x in line.split(',')]
@@ -67,7 +69,7 @@ def getSelfReportData(participantDict):
         6: "happiness"
     }
     emotion = 1
-    with open('SelfReport.csv') as selfReportFile:
+    with open(DATA_DIR + 'SelfReport.csv') as selfReportFile:
         for line in selfReportFile.readlines():
             l = [x.strip() for x in line.split(',')]
             if (l[0] == 'NULL'):
@@ -92,7 +94,7 @@ def getVideoData(participantDict):
         7: "neutral"
     }
     emotion = 1
-    with open('VideoBaseline.csv') as videoBLFile:
+    with open(DATA_DIR + 'VideoBaseline.csv') as videoBLFile:
         for line in videoBLFile.readlines():
             l = [x.strip() for x in line.split(',')]
             if (l[0] == 'NULL'):
@@ -105,7 +107,7 @@ def getVideoData(participantDict):
             if (emotion == 8):
                 emotion = 1
 
-    with open('VideoEmotion.csv') as videoFile:
+    with open(DATA_DIR + 'VideoEmotion.csv') as videoFile:
         for line in videoFile.readlines():
             l = [x.strip() for x in line.split(',')]
             if (l[0] == 'NULL'):
@@ -129,7 +131,7 @@ def getAudioData(participantDict):
         5: "fear"
     }
     emotion = 1
-    with open('AudioBaseline.csv') as audioBLFile:
+    with open(DATA_DIR + 'AudioBaseline.csv') as audioBLFile:
         for line in audioBLFile.readlines():
             l = [x.strip() for x in line.split(',')]
             if (l[0] == 'NULL'):
@@ -142,7 +144,7 @@ def getAudioData(participantDict):
             if (emotion == 5):
                 emotion = 1
 
-    with open('AudioEmotion.csv') as audioFile:
+    with open(DATA_DIR + 'AudioEmotion.csv') as audioFile:
         for line in audioFile.readlines():
             l = [x.strip() for x in line.split(',')]
             if (l[0] == 'NULL'):
