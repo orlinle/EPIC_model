@@ -1,196 +1,155 @@
-from statistics import mean
+from pickle import load
+from collections import OrderedDict, defaultdict
+from operator import itemgetter
+import numpy as np
+from sklearn.model_selection import KFold, train_test_split
+from sklearn.svm import SVR
+from sklearn import metrics
+
 
 DATA_DIR = 'data\\'
-
-#maybe optimize code so it doesn't create the whole dictionary each time anew
-participants = {}
+DICT_FILE = 'data_dict'
 
 
-def createParticipants():
-    emotions = {
-        0: "happy",
-        1: "sad",
-        2: "neutral"
-    }
-    details = {}
-    participants = {}
-    with open(DATA_DIR + 'Participant.csv') as participantFile:
-        for line in participantFile.readlines():
-            details = {}
-            l = [x.strip() for x in line.split(',')]
-            if (l[0] == '0'):
-                continue
-            if (l[0] == 'NULL'):
-                return participants
-            #read details from participant data table
-            identification = int(l[0][1:4])
-            details['emotion'] = emotions.get(int(l[2]))
-            details['videoBaseline'] = l[3]
-            details['videoBaselineLabeled'] = l[4]
-            details['videoBaselineData'] = l[5]
-            details['video'] = l[6]
-            details['videoLabeled'] = l[7]
-            details['videoData'] = l[8]
-            details['audioBaseline'] = l[9]
-            details['audioBaselineData'] = l[10]
-            details['audio'] = l[11]
-            details['audioData'] = l[12]
-            details['writingTime'] = l[13]
-            details['ultimatumOffer'] = l[14]
-            details['ultimatumOfferPercent'] = l[15]
-            details['ultimatumInstructionRT'] = l[16]
-            details['ultimatumDMrt'] = l[17]
-            details['trustOffer'] = l[18]
-            details['trustOfferPercent'] = l[19]
-            details['trustInstructionRT'] = l[20]
-            details['trustDMrt'] = l[21]
-            selfReport = {}
-            vidioBL = {}
-            vidio = {}
-            audioBL = {}
-            audio = {}
-            details['selfReport'] = selfReport
-            details['vidioBL'] = vidioBL
-            details['vidio'] = vidio
-            details['audioBL'] = audioBL
-            details['audio'] = audio
-            participants[identification] = details
-
-    return participants
-
-def getSelfReportData(participantDict):
-    #get info from self-report data table
-    emotions = {
-        1: "apathy",
-        2: "sadness",
-        3: "calm",
-        4: "amusement",
-        5: "grief",
-        6: "happiness"
-    }
-    emotion = 1
-    with open(DATA_DIR + 'SelfReport.csv') as selfReportFile:
-        for line in selfReportFile.readlines():
-            l = [x.strip() for x in line.split(',')]
-            if (l[0] == 'NULL'):
-                return
-            if (emotion == 1):
-                identification = int(l[1][1:4])
-                participant = participantDict[identification]
-            participant['selfReport'][emotions.get(emotion)] = int(l[3])
-            emotion += 1
-            if (emotion == 7):
-                emotion = 1
-    return
-
-def getVideoData(participantDict):
-    emotions = {
-        1: "angry",
-        2: "disgust",
-        3: "fear",
-        4: "happy",
-        5: "sad",
-        6: "surprise",
-        7: "neutral"
-    }
-    emotion = 1
-    with open(DATA_DIR + 'VideoBaseline.csv') as videoBLFile:
-        for line in videoBLFile.readlines():
-            l = [x.strip() for x in line.split(',')]
-            if (l[0] == 'NULL'):
-                break
-            if (emotion == 1):
-                identification = int(l[1][1:4])
-                participant = participantDict[identification]
-            participant['vidioBL'][emotions.get(emotion)] = float(l[3])
-            emotion += 1
-            if (emotion == 8):
-                emotion = 1
-
-    with open(DATA_DIR + 'VideoEmotion.csv') as videoFile:
-        for line in videoFile.readlines():
-            l = [x.strip() for x in line.split(',')]
-            if (l[0] == 'NULL'):
-                return
-            if (emotion == 1):
-                identification = int(l[1][1:4])
-                participant = participantDict[identification]
-            participant['vidio'][emotions.get(emotion)] = float(l[3])
-            emotion += 1
-            if (emotion == 8):
-                emotion = 1
-    return
+def add_feature(part_id, feature_dict, feature, feature_names, feature_name):
+    if feature_name not in feature_names:
+        feature_names.append(feature_name)
+    feature_dict[part_id].append(feature)
 
 
-def getAudioData(participantDict):
-    emotions = {
-        1: "neutral",
-        2: "happy",
-        3: "sad",
-        4: "angry",
-        5: "fear"
-    }
-    emotion = 1
-    with open(DATA_DIR + 'AudioBaseline.csv') as audioBLFile:
-        for line in audioBLFile.readlines():
-            l = [x.strip() for x in line.split(',')]
-            if (l[0] == 'NULL'):
-                break
-            if (emotion == 1):
-                identification = int(l[1][1:4])
-                participant = participantDict[identification]
-            participant['audioBL'][emotions.get(emotion)] = float(l[3])
-            emotion += 1
-            if (emotion == 5):
-                emotion = 1
+def add_feature_all_participants(data, feature_dict, feature_names, key):
+    feature_name = key
+    for part_id, part_data in data.items():
+        feature = part_data[key]
+        add_feature(part_id, feature_dict, feature, feature_names, feature_name)
 
-    with open(DATA_DIR + 'AudioEmotion.csv') as audioFile:
-        for line in audioFile.readlines():
-            l = [x.strip() for x in line.split(',')]
-            if (l[0] == 'NULL'):
-                return
-            if (emotion == 1):
-                identification = int(l[1][1:4])
-                participant = participantDict[identification]
-            participant['audio'][emotions.get(emotion)] = float(l[3])
-            emotion += 1
-            if (emotion == 5):
-                emotion = 1
-    return
+
+def recording_emotions(data, feature_dict, feature_names, recording_key):
+    for part_id, part_data in data.items():
+        emotions = part_data[recording_key]
+        for emotion,strength in emotions.items():
+            feature_name = '{}: {}'.format(recording_key, emotion)
+            add_feature(part_id, feature_dict, strength, feature_names,
+                        feature_name)
+
+
+def recording_emotions_diff(data, feature_dict, feature_names, recording_key, recordingBL_key):
+    for part_id, part_data in data.items():
+        emotions = part_data[recording_key]
+        emotions_bl = part_data[recordingBL_key]
+        for emotion,strength in emotions.items():
+            difference = strength - emotions_bl[emotion]
+            feature_name = '{}: {} difference'.format(recording_key, emotion)
+            add_feature(part_id, feature_dict, difference, feature_names,
+                        feature_name)
+
+
+def recording_emotions_ratio(data, feature_dict, feature_names, recording_key, recordingBL_key):
+    for part_id, part_data in data.items():
+        emotions = part_data[recording_key]
+        emotions_bl = part_data[recordingBL_key]
+        for emotion,strength in emotions.items():
+            if strength == 0:
+                ratio = 0
+            elif emotions_bl[emotion] == 0:
+                ratio = strength / 0.0000001
+            else:
+                ratio = strength / emotions_bl[emotion]
+            feature_name = '{}: {} ratio'.format(recording_key, emotion)
+            add_feature(part_id, feature_dict, ratio, feature_names,
+                        feature_name)
+
+
+def self_report_emotions(data, feature_dict, feature_names):
+    for part_id, part_data in data.items():
+        emotions = part_data['selfReport']
+        for emotion,strength in emotions.items():
+            feature_name = 'self report: {}'.format(emotion)
+            add_feature(part_id, feature_dict, strength, feature_names,
+                        feature_name)
+
+
+def exp_emotion(data, feature_dict, feature_names):
+    feature_names.append('experiment emotion')
+    for part_id, part_data in data.items():
+        feature_dict[part_id].append(part_data['emotion'][1])
+
+
+def extract_features(data):
+    feature_dict = defaultdict(list)
+    feature_names = list()
+    '''extract features'''
+    # exp_emotion(data, feature_dict, feature_names)
+    self_report_emotions(data, feature_dict, feature_names)
+    # recording_emotions(data, feature_dict, feature_names, 'video')
+    # recording_emotions_diff(data, feature_dict, feature_names, 'video', 'videoBL')
+    # recording_emotions_ratio(data, feature_dict, feature_names, 'video', 'videoBL')
+    # recording_emotions(data, feature_dict, feature_names, 'audio')
+    # recording_emotions_diff(data, feature_dict, feature_names, 'audio', 'audioBL')
+    # recording_emotions_ratio(data, feature_dict, feature_names, 'audio', 'audioBL')
+    # add_feature_all_participants(data, feature_dict, feature_names, 'ultimatumDMrt')
+    # add_feature_all_participants(data, feature_dict, feature_names, 'ultimatumInstructionRT')
+    # add_feature_all_participants(data, feature_dict, feature_names, 'trustDMrt')
+    # add_feature_all_participants(data, feature_dict, feature_names, 'trustInstructionRT')
+    # add_feature_all_participants(data, feature_dict, feature_names,'ultimatumOffer')
+    '''convert to list'''
+    feature_dict_sorted = OrderedDict(sorted(feature_dict.items(), key=itemgetter(0)))
+    feature_list = np.array([v for v in feature_dict_sorted.values()])
+    return feature_list, feature_names
+
+
+def get_labels(data, key):
+    labels = []
+    for part_id,part_data in data.items():
+        labels.append(part_data[key])
+    return np.array(labels)
+
+
+def train_cross_validation(x, y):
+    scores = []
+    RMSE = []
+    svr = SVR(kernel='rbf')
+    cv = KFold(n_splits=3,shuffle=False)
+    for train_index, test_index in cv.split(x):
+        [x_train, x_test, y_train, y_test] = x[train_index], x[test_index], \
+                                             y[train_index], y[test_index]
+        svr.fit(x_train, y_train)
+        scores.append(svr.score(x_test,y_test))
+        y_pred = svr.predict(x_test)
+        RMSE.append(np.sqrt(metrics.mean_squared_error(y_test, y_pred)))
+    print('cross validation:')
+    print('mean r2 = {}'.format(np.mean(scores)))
+    print('mean RMSE = {}'.format(np.mean(RMSE)))
+
+
+def train_test(x,y):
+    [x_train, x_test, y_train, y_test] = train_test_split(x,y,test_size=0.2)
+    # train - rbf
+    svr_rbf = SVR(kernel='rbf')
+    svr_rbf.fit(x_train, y_train)
+    # test
+    y_pred_rbf = svr_rbf.predict(x_test)
+    print('rbf: {}'.format(np.sqrt(metrics.mean_squared_error(y_test, y_pred_rbf))))
+    # train - linear
+    svr_linear = SVR(kernel='linear')
+    svr_linear.fit(x_train, y_train)
+    # test
+    y_pred_linear = list(svr_linear.predict(x_test))
+    print('linear: {}'.format(np.sqrt(metrics.mean_squared_error(y_test, y_pred_linear))))
 
 
 def main():
-    participants = createParticipants()
-    getSelfReportData(participants)
-    getVideoData(participants)
-    getAudioData(participants)
-    happy1 =[]
-    happy2 = []
-    sad1 = []
-    sad2 = []
-    neut1 = []
-    neut2 = []
-    pars = {
-        "happy": [happy1, happy2],
-        "sad": [sad1, sad2],
-        "neutral": [neut1,neut2]
-    }
+    with open(DATA_DIR + DICT_FILE, 'rb') as f:
+        data = load(f)
+    data_sorted = OrderedDict(sorted(data.items(), key=itemgetter(0)))
 
-    for participant in participants.values():
-        stat = pars.get(participant['emotion'])
-        stat[0].append(int(participant['ultimatumOffer']))
-        stat[1].append(int(participant['trustOffer']))
+    [features, feature_names] = extract_features(data_sorted)
+    ultimatum_labels = get_labels(data_sorted, 'ultimatumOffer')
+    trust_labels = get_labels(data_sorted, 'trustOffer')
 
-    print('happy ultimatum mean: ',mean(happy1))
-    print('happy trust mean: ', mean(happy2))
-    print('sad ultimatum mean: ', mean(sad1))
-    print('sad trust mean: ', mean(sad2))
-    print('neutral ultimatum mean: ', mean(neut1))
-    print('neutral trust mean: ', mean(neut2))
-
-
-
-
+    print(feature_names)
+    # train_test(features, ultimatum_labels)
+    train_cross_validation(features, ultimatum_labels)
 
 if __name__ == "__main__":
     main()
