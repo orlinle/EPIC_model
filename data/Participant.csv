@@ -1,4 +1,4 @@
-0,0,0,NULL,NULL,NULL,NULL,a,NULL,NULL,NULL,NULL,NULL,0,0,0,0,0,0,0,0,0,0,0,NULL
+0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,0,0,0,0,0,0,0,0,0,0,0,NULL
 1016,1,1,VideoBaseline16.avi,VideoBaselineLabeled16.avi,VideoBaselineData16,Video16.avi,VideoLabeled16.avi,VideoData16,AudioBaseline16.wav,AudioBaselineData16,Audio16.wav,AudioData16,61,5,50,16,14,10,100,17,22,24,22,14
 1001,1,1,VideoBaseline1001.avi,VideoBaselineLabeled1001.avi,VideoBaselineData1001,Video1001.avi,VideoLabeled1001.avi,VideoData1001,AudioBaseline1001.wav,AudioBaselineData1001,Audio1001.wav,AudioData1001,74,5,50,23,21,3,30,9,21,28,21,2
 1002,0,0,VideoBaseline1002.avi,VideoBaselineLabeled1002.avi,VideoBaselineData1002,Video1002.avi,VideoLabeled1002.avi,VideoData1002,AudioBaseline1002.wav,AudioBaselineData1002,Audio1002.wav,AudioData1002,35,3,30,18,21,1,10,0,33,42,16,22
@@ -18,8 +18,16 @@
 1017,2,2,VideoBaseline1017.avi,VideoBaselineLabeled1017.avi,VideoBaselineData1017,Video1017.avi,VideoLabeled1017.avi,VideoData1017,AudioBaseline1017.wav,AudioBaselineData1017,Audio1017.wav,AudioData1017,52,3,30,27,26,4,40,3,26,26,16,23
 1018,0,0,VideoBaseline1018.avi,VideoBaselineLabeled1018.avi,VideoBaselineData1018,Video1018.avi,VideoLabeled1018.avi,VideoData1018,AudioBaseline1018.wav,AudioBaselineData1018,Audio1018.wav,AudioData1018,22,0,0,16,20,2,20,3,18,27,21,15
 1019,1,1,VideoBaseline1019.avi,VideoBaselineLabeled1019.avi,VideoBaselineData1019,Video1019.avi,VideoLabeled1019.avi,VideoData1019,AudioBaseline1019.wav,AudioBaselineData1019,Audio1019.wav,AudioData1019,80,5,50,15,17,5,50,12,16,12,22,20
+1020,2,2,VideoBaseline1020.avi,VideoBaselineLabeled1020.avi,VideoBaselineData1020,Video1020.avi,VideoLabeled1020.avi,VideoData1020,AudioBaseline1020.wav,AudioBaselineData1020,Audio1020.wav,AudioData1020,48,5,50,28,22,2,20,6,49,20,19,28
 1021,0,0,VideoBaseline1021.avi,VideoBaselineLabeled1021.avi,VideoBaselineData1021,Video1021.avi,VideoLabeled1021.avi,VideoData1021,AudioBaseline1021.wav,AudioBaselineData1021,Audio1021.wav,AudioData1021,38,2,20,35,26,4,40,6,23,15,20,16
 1022,1,1,VideoBaseline1022.avi,VideoBaselineLabeled1022.avi,VideoBaselineData1022,Video1022.avi,VideoLabeled1022.avi,VideoData1022,AudioBaseline1022.wav,AudioBaselineData1022,Audio1022.wav,AudioData1022,118,0,0,39,19,5,50,7,18,15,22,17
 1023,2,2,VideoBaseline1023.avi,VideoBaselineLabeled1023.avi,VideoBaselineData1023,Video1023.avi,VideoLabeled1023.avi,VideoData1023,AudioBaseline1023.wav,AudioBaselineData1023,Audio1023.wav,AudioData1023,89,7,70,59,34,10,100,14,31,26,17,18
+1024,1,1,VideoBaseline1024.avi,VideoBaselineLabeled1024.avi,VideoBaselineData1024,Video1024.avi,VideoLabeled1024.avi,VideoData1024,AudioBaseline1024.wav,AudioBaselineData1024,Audio1024.wav,AudioData1024,19,10,100,15,20,10,100,24,20,13,24,26
+1025,0,0,VideoBaseline1025.avi,VideoBaselineLabeled1025.avi,VideoBaselineData1025,Video1025.avi,VideoLabeled1025.avi,VideoData1025,AudioBaseline1025.wav,AudioBaselineData1025,Audio1025.wav,AudioData1025,85,7,70,28,33,4,40,12,19,22,21,24
+1026,1,1,VideoBaseline1026.avi,VideoBaselineLabeled1026.avi,VideoBaselineData1026,Video1026.avi,VideoLabeled1026.avi,VideoData1026,AudioBaseline1026.wav,AudioBaselineData1026,Audio1026.wav,AudioData1026,56,5,50,18,15,10,100,11,23,16,16,25
+1027,2,2,VideoBaseline1027.avi,VideoBaselineLabeled1027.avi,VideoBaselineData1027,Video1027.avi,VideoLabeled1027.avi,VideoData1027,AudioBaseline1027.wav,AudioBaselineData1027,Audio1027.wav,AudioData1027,74,4,40,24,15,10,100,15,21,23,21,27
+1028,0,0,VideoBaseline1028.avi,VideoBaselineLabeled1028.avi,VideoBaselineData1028,Video1028.avi,VideoLabeled1028.avi,VideoData1028,AudioBaseline1028.wav,AudioBaselineData1028,Audio1028.wav,AudioData1028,76,4,40,42,21,5,50,12,29,19,23,29
+1030,2,2,VideoBaseline1030.avi,VideoBaselineLabeled1030.avi,VideoBaselineData1030,Video1030.avi,VideoLabeled1030.avi,VideoData1030,AudioBaseline1030.wav,AudioBaselineData1030,Audio1030.wav,AudioData1030,57,4,40,19,15,10,100,18,32,25,24,30
+1031,0,0,VideoBaseline1031.avi,VideoBaselineLabeled1031.avi,VideoBaselineData1031,Video1031.avi,VideoLabeled1031.avi,VideoData1031,AudioBaseline1031.wav,AudioBaselineData1031,Audio1031.wav,AudioData1031,32,4,40,18,18,4,40,7,22,13,19,31
 1999,2,2,VideoBaseline1999.avi,VideoBaselineLabeled1999.avi,VideoBaselineData1999,Video1999.avi,VideoLabeled1999.avi,VideoData1999,AudioBaseline1999.wav,AudioBaselineData1999,Audio1999.wav,AudioData1999,28,8,80,17,17,4,40,12,12,16,20,6
 NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL

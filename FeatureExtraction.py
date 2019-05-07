@@ -108,7 +108,7 @@ def get_labels(data, key):
 def train_cross_validation(x, y):
     scores = []
     RMSE = []
-    svr = SVR(kernel='rbf')
+    svr = SVR(kernel='rbf', gamma=0.1)
     cv = KFold(n_splits=3,shuffle=False)
     for train_index, test_index in cv.split(x):
         [x_train, x_test, y_train, y_test] = x[train_index], x[test_index], \
@@ -149,7 +149,11 @@ def main():
 
     print(feature_names)
     # train_test(features, ultimatum_labels)
+    print('ultimatum prediction:')
     train_cross_validation(features, ultimatum_labels)
+    print('trust prediction:')
+    train_cross_validation(features, trust_labels)
+
 
 if __name__ == "__main__":
     main()
