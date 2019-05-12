@@ -1,0 +1,20 @@
+digraph Tree {
+node [shape=box] ;
+0 [label="self report: sadness <= 4.5\nmse = 5.948\nsamples = 20\nvalue = 4.05"] ;
+1 [label="self report: happiness <= 3.5\nmse = 4.299\nsamples = 19\nvalue = 3.737"] ;
+0 -> 1 [labeldistance=2.5, labelangle=45, headlabel="True"] ;
+2 [label="self report: sadness <= 1.5\nmse = 4.347\nsamples = 14\nvalue = 4.286"] ;
+1 -> 2 ;
+3 [label="mse = 1.889\nsamples = 6\nvalue = 3.333"] ;
+2 -> 3 ;
+4 [label="mse = 5.0\nsamples = 8\nvalue = 5.0"] ;
+2 -> 4 ;
+5 [label="self report: apathy <= 1.5\nmse = 0.96\nsamples = 5\nvalue = 2.2"] ;
+1 -> 5 ;
+6 [label="mse = 0.0\nsamples = 1\nvalue = 4.0"] ;
+5 -> 6 ;
+7 [label="mse = 0.188\nsamples = 4\nvalue = 1.75"] ;
+5 -> 7 ;
+8 [label="mse = 0.0\nsamples = 1\nvalue = 10.0"] ;
+0 -> 8 [labeldistance=2.5, labelangle=-45, headlabel="False"] ;
+}

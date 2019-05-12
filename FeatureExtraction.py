@@ -5,6 +5,7 @@ import numpy as np
 from sklearn.model_selection import KFold, train_test_split
 from sklearn.svm import SVR
 from sklearn import metrics
+from sklearn.tree import DecisionTreeRegressor, export_graphviz
 
 
 DATA_DIR = 'data\\'
@@ -105,24 +106,23 @@ def get_labels(data, key):
     return np.array(labels)
 
 
-def train_cross_validation(x, y):
+def train_with_cross_validation(x, y, regressor_obj):
     scores = []
     RMSE = []
-    svr = SVR(kernel='rbf', gamma=0.1)
     cv = KFold(n_splits=3,shuffle=False)
     for train_index, test_index in cv.split(x):
         [x_train, x_test, y_train, y_test] = x[train_index], x[test_index], \
                                              y[train_index], y[test_index]
-        svr.fit(x_train, y_train)
-        scores.append(svr.score(x_test,y_test))
-        y_pred = svr.predict(x_test)
+        regressor_obj.fit(x_train, y_train)
+        scores.append(regressor_obj.score(x_test,y_test))
+        y_pred = regressor_obj.predict(x_test)
         RMSE.append(np.sqrt(metrics.mean_squared_error(y_test, y_pred)))
     print('cross validation:')
     print('mean r2 = {}'.format(np.mean(scores)))
     print('mean RMSE = {}'.format(np.mean(RMSE)))
 
 
-def train_test(x,y):
+def svr_train_test(x, y):
     [x_train, x_test, y_train, y_test] = train_test_split(x,y,test_size=0.2)
     # train - rbf
     svr_rbf = SVR(kernel='rbf')
@@ -148,11 +148,26 @@ def main():
     trust_labels = get_labels(data_sorted, 'trustOffer')
 
     print(feature_names)
-    # train_test(features, ultimatum_labels)
+
+    svr = SVR(kernel='rbf', gamma=0.1)
+    print('\nsvr\n')
     print('ultimatum prediction:')
-    train_cross_validation(features, ultimatum_labels)
+    train_with_cross_validation(features, ultimatum_labels, svr)
     print('trust prediction:')
-    train_cross_validation(features, trust_labels)
+    train_with_cross_validation(features, trust_labels, svr)
+
+    dtr = DecisionTreeRegressor(max_depth=3, random_state=1)
+    print('\ndecision tree regressor\n')
+    print('ultimatum prediction:')
+    train_with_cross_validation(features, ultimatum_labels, dtr)
+    export_graphviz(dtr, out_file='tree_ult.dot',
+                    feature_names=feature_names)
+    print('trust prediction:')
+    train_with_cross_validation(features, trust_labels, dtr)
+    export_graphviz(dtr, out_file='tree_trust.dot',
+                    feature_names=feature_names)
+    # to visualize decision tree copy content of .dot file here -
+    # http://www.webgraphviz.com/
 
 
 if __name__ == "__main__":
