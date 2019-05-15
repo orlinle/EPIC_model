@@ -1,6 +1,8 @@
 from statistics import mean, stdev
 from scipy.stats import ttest_ind
 from pickle import dump
+import csv
+
 
 # need to make sure everything works smoothly also when we have multiple
 # attempts of the same subject (i.e. 1xxx, 2xxx etc.)
@@ -175,8 +177,106 @@ def removeInvalidParticipants(participants):
             pass
 
 
+def getPreliminaryQuestionnaireData(participantDict):
+    first = True
+    dict = {}
+    genders = {
+        "נקבה": "f",
+        "זכר": "m",
+        "אחר": "other"
+    }
+    statuses = {
+        "רווק/ה": "single",
+        "נשוי/אה": "married",
+        "גרוש/ה": "divorced",
+        "אלמן/ה": "widowed"
+    }
+    countries = {
+        "ישראל": "Israel",
+        "ארצות הברית": "USA",
+        "אתיופיה": "Ethiopia",
+        "ברית המועצות לשעבר": "USSR",
+        "צרפת": "France"
+    }
+    educations = {
+        "עד תיכונית": "high-school",
+        "תיכונית (בגרות מלאה)": "Bagrut",
+        "אקדמאית- תואר ראשון": "Ba",
+        "אקדמאית- תואר שני": "Ms",
+        "אקדמאית- תואר שלישי": "Phd"
+    }
+    yesOrNo = {
+        "כן": "yes",
+        "לא": "no"
+    }
+    economicStates = {
+        "נמוך": 1,
+        "נמוך-בינוני": 2,
+        "בינוני": 3,
+        "בינוני-גבוה": 4,
+        "גבוה": 5
+    }
+    religiousAffiliations = {
+        "יהודית": "J",
+        "מוסלמית": "M",
+        "נוצרית": "C",
+        "דרוזית": "D"
+    }
+    agreement = {
+        '1 (לא מסכים כלל)': 1,
+        '2 (די מתנגד)': 2,
+        '3 (לא מסכים ולא מתנגד)': 3,
+        '4 (די מסכים)': 4,
+        '5 (מסכים מאוד)': 5
+    }
+    with open(DATA_DIR + 'PreliminaryQuestionnaire.csv', newline='', encoding='utf-8') as f:
+        reader = csv.reader(f)
+        for row in reader:
+            if first or row[0] == '':
+                first = False
+                continue
+
+            participant = participantDict.get(int(row[4]))
+            if participant is None:
+                continue
+            participant['yearOfBirth'] = int(row[5])
+            participant['gender'] = genders.get(row[6])
+            participant['status'] = statuses.get(row[7])
+            participant['Birthplace'] = countries.get(row[8],"other")
+            participant['FatherBirthplace'] = countries.get(row[9], "other")
+            participant['MotherBirthplace'] = countries.get(row[10], "other")
+            participant['education'] = educations.get(row[11])
+            participant['steadyIncome'] = yesOrNo.get(row[12])
+            participant['economicState']  = economicStates.get(row[14])
+            altruism = 0
+            for i in range(15,25):
+                if row[i] == '5 (בסבירות גבוהה)':
+                    altruism += 5
+                    continue
+                if row[i] == '1 (כלל לא סביר)':
+                    altruism += 1
+                    continue
+                altruism += int(row[i])
+            participant['altruism'] = altruism
+            extraversion = 0
+            introversion = 0
+            extraversion += agreement.get(row[25])
+            extraversion += agreement.get(row[27])
+            extraversion += agreement.get(row[28])
+            extraversion += agreement.get(row[30])
+            extraversion += agreement.get(row[32])
+            introversion += agreement.get(row[26])
+            introversion += agreement.get(row[29])
+            introversion += agreement.get(row[31])
+            #take mean of extra- and intra- version because number of questions are not equal
+            participant['extraversion'] = extraversion / 5
+            participant['introversion'] = introversion / 3
+            participant['religion'] = religiousAffiliations.get(row[33],"other")
+    return
+
 def main():
     participants = createParticipants()
+    getPreliminaryQuestionnaireData(participants)
     getSelfReportData(participants)
     getVideoData(participants)
     getAudioData(participants)
