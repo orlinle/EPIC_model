@@ -154,11 +154,11 @@ def plot_means_all_separation_types(data, key):
     all_data = separate_by_self_report1(data)
     print_datasets(all_data, 'self report 1')
     m1, s1 = stats_param(all_data, key)
-    all_data = separate_by_recording_ratio(data, 'video', 'videoBL')
-    print_datasets(all_data, 'video ratio')
+    all_data = separate_by_recording_ratio(data, 'videoMean', 'videoBLMean')
+    print_datasets(all_data, 'video mean ratio')
     m2, s2 = stats_param(all_data, key)
-    all_data = separate_by_recording_diff(data, 'video', 'videoBL')
-    print_datasets(all_data, 'video diff')
+    all_data = separate_by_recording_diff(data, 'videoMean', 'videoBLMean')
+    print_datasets(all_data, 'video mean diff')
     m3, s3 = stats_param(all_data, key)
     all_data = separate_by_recording_ratio(data, 'audio', 'audioBL')
     print_datasets(all_data, 'audio ratio')
@@ -167,8 +167,62 @@ def plot_means_all_separation_types(data, key):
     print_datasets(all_data, 'audio diff')
     m5, s5 = stats_param(all_data, key)
     plot_means([m1, m2, m3, m4, m5], ['k', 'r', 'g', 'c', 'm'],
-               ['self report', 'video ratio', 'video diff', 'audio ratio',
+               ['self report', 'video mean ratio', 'video mean diff', 'audio ratio',
                 'audio diff'], key)
+
+
+def evaluate_separation(data_sep, data_sep_gold):
+    precision = dict()
+    recall = dict()
+    F1 = dict()
+    correct_participants = defaultdict(list)
+    for emotion,data in data_sep.items():
+        participants = data.keys()
+        participants_gold = data_sep_gold[emotion].keys()
+        c = 0
+        for p in participants:
+            if p in participants_gold:
+                c += 1
+                correct_participants[emotion].append(p)
+        precision[emotion] = c / len(participants)
+        recall[emotion] = c / len(participants_gold)
+        if precision[emotion] == 0 or recall[emotion] == 0:
+            F1[emotion] = 0
+        else:
+            F1[emotion] = 2 * ((precision[emotion] * recall[emotion])/
+                           (precision[emotion] + recall[emotion]))
+    for e,correct in correct_participants.items():
+        print('{}: correct: {}, precision = {:.3f}, recall = {:.3f}, F1 = {:.3f}'.
+              format(e,correct,precision[e],recall[e],F1[e]))
+    return correct_participants, precision, recall
+
+
+def compare_separations(data_sorted):
+    gold = separate_by_self_report1(data_sorted)
+    videoFreqRatio = separate_by_recording_ratio(data_sorted,'videoFreq',
+                                                 'videoBLFreq')
+    print('video freq ratio')
+    evaluate_separation(videoFreqRatio, gold)
+    videoMeanRatio = separate_by_recording_ratio(data_sorted, 'videoMean',
+                                                 'videoBLMean')
+    print('\nvideo mean ratio')
+    evaluate_separation(videoMeanRatio, gold)
+    videoFreqDiff = separate_by_recording_diff(data_sorted,'videoFreq',
+                                                 'videoBLFreq')
+    print('\nvideo freq diff')
+    evaluate_separation(videoFreqDiff, gold)
+    videoMeanDiff = separate_by_recording_diff(data_sorted, 'videoMean',
+                                                 'videoBLMean')
+    print('\nvideo mean diff')
+    evaluate_separation(videoMeanDiff, gold)
+    audioRatio = separate_by_recording_ratio(data_sorted, 'audio',
+                                                 'audioBL')
+    print('\naudio ratio')
+    evaluate_separation(audioRatio, gold)
+    audioDiff = separate_by_recording_diff(data_sorted,'audio',
+                                                 'audioBL')
+    print('\naudio diff')
+    evaluate_separation(audioDiff, gold)
 
 
 def main():
@@ -176,6 +230,9 @@ def main():
         data = load(f)
     data_sorted = OrderedDict(sorted(data.items(), key=itemgetter(0)))
 
+    compare_separations(data_sorted)
+
+    print('')
     key = 'ultimatumOffer'
     plot_means_all_separation_types(data_sorted, key)
 

@@ -1,6 +1,12 @@
 from statistics import mean, stdev
 from scipy.stats import ttest_ind
 from pickle import dump
+import os
+import re
+import numpy as np
+
+VIDEO_DIR = 'data\\VideoFiles\\'
+VIDEO_BL_DIR = 'data\\VideoBaselineFiles\\'
 
 # need to make sure everything works smoothly also when we have multiple
 # attempts of the same subject (i.e. 1xxx, 2xxx etc.)
@@ -52,13 +58,13 @@ def createParticipants():
             details['trustInstructionRT'] = float(l[20])
             details['trustDMrt'] = float(l[21])
             selfReport = {}
-            videoBL = {}
-            video = {}
+            videoBLFreq = {}
+            videoFreq = {}
             audioBL = {}
             audio = {}
             details['selfReport'] = selfReport
-            details['videoBL'] = videoBL
-            details['video'] = video
+            details['videoBLFreq'] = videoBLFreq
+            details['videoFreq'] = videoFreq
             details['audioBL'] = audioBL
             details['audio'] = audio
             participants[identification] = details
@@ -110,7 +116,7 @@ def getVideoData(participantDict):
             if (emotion == 1):
                 identification = int(l[1][-3:])
                 participant = participantDict[identification]
-            participant['videoBL'][emotions.get(emotion)] = float(l[3])
+            participant['videoBLFreq'][emotions.get(emotion)] = float(l[3])
             emotion += 1
             if (emotion == 8):
                 emotion = 1
@@ -123,7 +129,7 @@ def getVideoData(participantDict):
             if (emotion == 1):
                 identification = int(l[1][-3:])
                 participant = participantDict[identification]
-            participant['video'][emotions.get(emotion)] = float(l[3])
+            participant['videoFreq'][emotions.get(emotion)] = float(l[3])
             emotion += 1
             if (emotion == 8):
                 emotion = 1
@@ -167,6 +173,23 @@ def getAudioData(participantDict):
     return
 
 
+def getVideoEmotionProbSum(directory, filename_type, participants, key):
+    for filename in os.listdir(directory):
+        if re.match(filename_type + '[0-9]+', filename):
+            participant_id = int(re.search('[0-9]+', filename).group()[-3:])
+            with open(directory + filename, 'r') as f:
+                emotions = f.readline().split()[1:]
+                emotion_prob = np.array([0.0] * len(emotions))
+                num_lines = 0
+                for line in f.readlines():
+                    num_lines += 1
+                    prob = np.array([float(p) for p in line.split()[1:]])
+                    emotion_prob += prob
+                emotion_prob = emotion_prob / num_lines
+            emotion_dict = dict(zip(emotions, emotion_prob))
+            participants[participant_id][key] = emotion_dict
+
+
 def removeInvalidParticipants(participants):
     for invalid in INVALID_LIST:
         try:
@@ -180,6 +203,9 @@ def main():
     getSelfReportData(participants)
     getVideoData(participants)
     getAudioData(participants)
+    getVideoEmotionProbSum(VIDEO_DIR, 'VideoData', participants, 'videoMean')
+    getVideoEmotionProbSum(VIDEO_BL_DIR, 'VideoBaselineData', participants, 'videoBLMean')
+
     # remove invalid subjects
     removeInvalidParticipants(participants)
 

@@ -11,6 +11,8 @@ from sklearn.tree import DecisionTreeRegressor, export_graphviz
 DATA_DIR = 'data\\'
 DICT_FILE = 'data_dict'
 
+EMOTIONS = ['happy', 'sad', 'neutral']
+
 
 def add_feature(part_id, feature_dict, feature, feature_names, feature_name):
     if feature_name not in feature_names:
@@ -29,6 +31,8 @@ def recording_emotions(data, feature_dict, feature_names, recording_key):
     for part_id, part_data in data.items():
         emotions = part_data[recording_key]
         for emotion,strength in emotions.items():
+            if emotion not in EMOTIONS:
+                continue
             feature_name = '{}: {}'.format(recording_key, emotion)
             add_feature(part_id, feature_dict, strength, feature_names,
                         feature_name)
@@ -39,6 +43,8 @@ def recording_emotions_diff(data, feature_dict, feature_names, recording_key, re
         emotions = part_data[recording_key]
         emotions_bl = part_data[recordingBL_key]
         for emotion,strength in emotions.items():
+            if emotion not in EMOTIONS:
+                continue
             difference = strength - emotions_bl[emotion]
             feature_name = '{}: {} difference'.format(recording_key, emotion)
             add_feature(part_id, feature_dict, difference, feature_names,
@@ -50,6 +56,8 @@ def recording_emotions_ratio(data, feature_dict, feature_names, recording_key, r
         emotions = part_data[recording_key]
         emotions_bl = part_data[recordingBL_key]
         for emotion,strength in emotions.items():
+            if emotion not in EMOTIONS:
+                continue
             if strength == 0:
                 ratio = 0
             elif emotions_bl[emotion] == 0:
@@ -86,8 +94,8 @@ def extract_features(data):
     # recording_emotions_diff(data, feature_dict, feature_names, 'video', 'videoBL')
     # recording_emotions_ratio(data, feature_dict, feature_names, 'video', 'videoBL')
     # recording_emotions(data, feature_dict, feature_names, 'audio')
-    recording_emotions_diff(data, feature_dict, feature_names, 'audio', 'audioBL')
-    # recording_emotions_ratio(data, feature_dict, feature_names, 'audio', 'audioBL')
+    # recording_emotions_diff(data, feature_dict, feature_names, 'audio', 'audioBL')
+    recording_emotions_ratio(data, feature_dict, feature_names, 'audio', 'audioBL')
     # add_feature_all_participants(data, feature_dict, feature_names, 'ultimatumDMrt')
     # add_feature_all_participants(data, feature_dict, feature_names, 'ultimatumInstructionRT')
     # add_feature_all_participants(data, feature_dict, feature_names, 'trustDMrt')
@@ -138,10 +146,22 @@ def svr_train_test(x, y):
     print('linear: {}'.format(np.sqrt(metrics.mean_squared_error(y_test, y_pred_linear))))
 
 
+def filter_data(data, desired_participants):
+    filtered_data = OrderedDict()
+    for part_id, part_data in data.items():
+        if part_id in desired_participants:
+            filtered_data[part_id] = part_data
+    return filtered_data
+
+
 def main():
     with open(DATA_DIR + DICT_FILE, 'rb') as f:
         data = load(f)
     data_sorted = OrderedDict(sorted(data.items(), key=itemgetter(0)))
+
+    v_ratio_correct_participants = [2, 3, 6, 8, 9, 17, 18, 21,  25, 26, 31]
+    a_ratio_correct_participants = [1, 7, 12, 16, 18, 20, 22, 24, 28]
+    # data_sorted = filter_data(data_sorted, a_ratio_correct_participants)
 
     [features, feature_names] = extract_features(data_sorted)
     ultimatum_labels = get_labels(data_sorted, 'ultimatumOffer')
