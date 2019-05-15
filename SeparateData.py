@@ -4,7 +4,8 @@ from operator import itemgetter
 import numpy as np
 from statistics import mean, stdev
 from scipy.stats import ttest_ind
-
+import matplotlib.pyplot as plt
+from matplotlib import rcParams
 
 DATA_DIR = 'data\\'
 DICT_FILE = 'data_dict'
@@ -37,26 +38,61 @@ def stats_param(all_data, key):
     return mean_key, std_key
 
 
-def separate_by_self_report(data):
-    # happy_data = dict()
-    # sad_data = dict()
-    # neutral_data = dict()
+def print_datasets(all_data, separation_type):
+    print('')
+    print(separation_type)
+    print('data separation:')
+    for emotion,data in all_data.items():
+        print(emotion, end=': ')
+        for part_id, part_data in data.items():
+            print(part_id, end=' ')
+        print('')
+    print('')
+
+
+def separate_by_self_report1(data):
     emotion_names = ['happy', 'sad', 'neutral']
     data_separated = defaultdict(dict)
     for part_id,part_data in data.items():
         emotions = part_data['selfReport']
         happy = emotions['happiness'] + emotions['amusement']
         sad = emotions['sadness'] + emotions['grief']
-        neutral = emotions['calm'] + emotions['apathy']  # can change this to be low of other emotions
+        neutral = emotions['calm'] + emotions['apathy']
         max_emotion = np.argmax([happy, sad, neutral])
         data_separated[emotion_names[max_emotion]][part_id] = part_data
-        # if max_emotion == 0 and (happy > max(sad, neutral) + 1):    # can take off 2nd condition
-        #     happy_data[part_id] = part_data
-        # elif max_emotion == 1 and (sad > max(happy, neutral) + 1):  # can take off 2nd conditio
-        #     sad_data[part_id] = part_data
-        # else:
-        #     neutral_data[part_id] = part_data
-    # return {'happy': happy_data, 'sad': sad_data, 'neutral': neutral_data}
+    return data_separated
+
+
+def separate_by_self_report2(data):
+    data_separated = defaultdict(dict)
+    for part_id,part_data in data.items():
+        emotions = part_data['selfReport']
+        happy = emotions['happiness'] + emotions['amusement']
+        sad = emotions['sadness'] + emotions['grief']
+        neutral = emotions['calm'] + emotions['apathy']
+        if happy > max(sad, neutral) + 1:
+            data_separated['happy'][part_id] = part_data
+        elif sad > max(happy, neutral) + 1:
+            data_separated['sad'][part_id] = part_data
+        else:
+            data_separated['neutral'][part_id] = part_data
+    return data_separated
+
+
+def separate_by_self_report3(data):
+    threshold = 8
+    data_separated = defaultdict(dict)
+    for part_id,part_data in data.items():
+        emotions = part_data['selfReport']
+        happy = emotions['happiness'] + emotions['amusement']
+        sad = emotions['sadness'] + emotions['grief']
+        neutral = emotions['calm'] + emotions['apathy']
+        if happy > max(sad, neutral) and happy > threshold:
+            data_separated['happy'][part_id] = part_data
+        elif sad > max(happy, neutral) and sad > threshold:
+            data_separated['sad'][part_id] = part_data
+        else:
+            data_separated['neutral'][part_id] = part_data
     return data_separated
 
 
@@ -99,22 +135,53 @@ def separate_by_recording_diff(data, recording_key, recording_bl_key):
     return data_separated
 
 
+def plot_means(means_all, colors, data_titles, y_label):
+    font_size = 14
+    rcParams.update({'font.size': font_size})
+    for i,means in enumerate(means_all):
+        mean_sorted = OrderedDict(sorted(means.items(), key=itemgetter(0)))
+        # std_sorted = OrderedDict(sorted(std_key.items(), key=itemgetter(0)))
+        plt.plot(mean_sorted.keys(), mean_sorted.values(), 'o-', color=colors[i])
+    plt.ylabel(y_label, fontsize=font_size)
+    plt.legend(data_titles, fontsize=font_size-2)
+    plt.title('mean {}'.format(y_label))
+    plt.show()
+
+
+def plot_means_all_separation_types(data, key):
+    plt.subplot(1,1,1)
+    print(key)
+    all_data = separate_by_self_report1(data)
+    print_datasets(all_data, 'self report 1')
+    m1, s1 = stats_param(all_data, key)
+    all_data = separate_by_recording_ratio(data, 'video', 'videoBL')
+    print_datasets(all_data, 'video ratio')
+    m2, s2 = stats_param(all_data, key)
+    all_data = separate_by_recording_diff(data, 'video', 'videoBL')
+    print_datasets(all_data, 'video diff')
+    m3, s3 = stats_param(all_data, key)
+    all_data = separate_by_recording_ratio(data, 'audio', 'audioBL')
+    print_datasets(all_data, 'audio ratio')
+    m4, s4 = stats_param(all_data, key)
+    all_data = separate_by_recording_diff(data, 'audio', 'audioBL')
+    print_datasets(all_data, 'audio diff')
+    m5, s5 = stats_param(all_data, key)
+    plot_means([m1, m2, m3, m4, m5], ['k', 'r', 'g', 'c', 'm'],
+               ['self report', 'video ratio', 'video diff', 'audio ratio',
+                'audio diff'], key)
+
+
 def main():
     with open(DATA_DIR + DICT_FILE, 'rb') as f:
         data = load(f)
-    # data_sorted = OrderedDict(sorted(data.items(), key=itemgetter(0)))
+    data_sorted = OrderedDict(sorted(data.items(), key=itemgetter(0)))
 
-    all_data = separate_by_self_report(data)
+    key = 'ultimatumOffer'
+    plot_means_all_separation_types(data_sorted, key)
 
-    # all_data = separate_by_recording_ratio(data, 'video', 'videoBL')
-    # all_data = separate_by_recording_ratio(data, 'audio', 'audioBL')
+    key = 'trustOffer'
+    plot_means_all_separation_types(data_sorted, key)
 
-    # all_data = separate_by_recording_diff(data, 'video', 'videoBL')
-    # all_data = separate_by_recording_diff(data, 'audio', 'audioBL')
-
-    stats_param(all_data, 'ultimatumOffer')
-    print('')
-    stats_param(all_data, 'trustOffer')
 
 if __name__ == "__main__":
     main()
